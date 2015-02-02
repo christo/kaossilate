@@ -1,0 +1,23 @@
+<html>
+    <script>
+        var sampleRateKhz = 48000;
+        var bits = 24; 
+        var bpm = 60; // low end gives maximum ram requirement for loop length and undo function
+        var channels = 2; // stereo = 2 channels
+        var loopBanks = 2; 
+        var beats = 32;  // per bank
+        var undoLevels = 2;
+
+        function bytesRequired() {
+                var bps = sampleRateKhz / 8.0 * bits * channels;
+                var bytesPerLoop = bps * beats * bpm / 60;
+                var bytesTotal = bytesPerLoop * (loopBanks + undoLevels);
+                var megs = bytesTotal / 1000 / 1000;
+                return megs;
+        }
+        console.log(bytesRequired(), "megs");
+    </script>
+    
+    <p>look in console</p>
+</html>
+

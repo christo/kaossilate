@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+    body {
+        background: black;
+        color: #ddd;
+    }
+
+    .container {
+        margin: auto;
+    }
+
+    .depth0 {
+        font: 20px Impact;
+        stroke-width: 1.0px;
+        /*stroke: black;*/
+        text-shadow: 0 0 5px #000;
+    }
+
+    .depth1 {
+        font: 20px Impact;
+        stroke-width: 1.0px;
+        /*stroke: black;*/
+        text-shadow: 0 0 5px #000;
+    }
+    .node circle {
+        fill: yellow;
+        stroke: #444;
+        stroke-width: 2.0px;
+    }
+
+    .node {
+        font: 9px Helvetica;
+        font-weight: bolder;
+        fill: #ddd;
+    }
+
+    .lead circle {
+        fill: yellow;
+    }
+
+    .acoustic circle {
+        fill: orange;
+    }
+
+    .bass circle {
+        fill: #3235ff;
+    }
+
+    .chord circle {
+        fill: #fb65ff;
+    }
+
+    .sound_effect circle {
+        fill: green;
+    }
+
+    .drum circle {
+        fill: red;
+    }
+
+    .pattern circle {
+        fill: #73a0b5;
+    }
+
+    .link {
+        fill: none;
+        stroke: #ccb;
+        stroke-width: 1.0px;
+    }
+
+    .link.lead {
+        stroke: yellow;
+    }
+
+    .link.acoustic {
+        stroke: orange;
+    }
+
+    .link.bass {
+        stroke: #3235ff;
+    }
+
+    .link.chord {
+        stroke: #fb65ff;
+    }
+
+    .link.sound_effect {
+        stroke: green;
+    }
+
+    .link.drum {
+        stroke: red;
+    }
+
+    .link.pattern {
+        stroke: #73a0b5;
+    }
+
+
+</style>
+<body>
+<div class="container">
+
+</div>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+    var diameter = 800;
+
+    var tree = d3.layout.tree()
+            .size([360, diameter / 3])
+            .separation(function(a, b) { return (a.parent == b.parent ? 2 : 4) / a.depth; });
+
+    var diagonal = d3.svg.diagonal.radial()
+            .projection(function(d) { return [d.y, d.x / 180 * Math.PI]; });
+
+    var svg = d3.select(".container").append("svg")
+            .attr("width", diameter)
+            .attr("height", diameter)
+            .append("g")
+            .attr("transform", "translate(" + diameter / 2 + "," + diameter / 2 + ")");
+
+    d3.json("ko2_programs.json", function(error, data) {
+
+        if (!!error) {
+            alert(error);
+        } else {
+
+            var cats = [];
+            data.categories.forEach(function(c) {
+                var progs = [];
+                c.programs.forEach(function(p) {
+//                    console.log(c.name, p.name, p.code, p.x, p.y);
+                    progs.push({name: p.code + " " + p.name});
+                });
+
+                cats.push({name: c.name, children: progs});
+            });
+            var root = {name: "Kaossilator 2", children: cats};
+
+            var nodes = tree.nodes(root);
+            var links = tree.links(nodes);
+
+            var fmt = function(x) {return x.name.toLowerCase().replace(' ', '_')};
+
+            var link = svg.selectAll(".link")
+                    .data(links)
+                    .enter().append("path")
+                    .attr("class", function(d) {
+                        if (d.target.depth == 2) {
+                            return "link " + fmt(d.target.parent);
+                        } else if (d.target.depth == 1)  {
+                            return "link " + fmt(d.target);
+                        }
+                        return "link";
+                    })
+                    .attr("d", diagonal);
+
+            var node = svg.selectAll(".node")
+                    .data(nodes)
+                    .enter().append("g")
+                    .attr("class", "node")
+                    .attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
+                    .attr("class", function(d){
+                        if (d.depth == 2) {
+                            return "node " + fmt(d.parent);
+                        } else if (d.depth == 1)  {
+                            return "node " + fmt(d);
+                        }
+                        return "node";
+                    });
+
+
+            node.append("circle")
+                    .attr("r", 3.5);
+            node.append("text")
+                    .attr("dy", ".31em")
+                    .attr("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
+                    .attr("transform", function(d) { return d.x < 180 ? "translate(8)" : "rotate(180)translate(-8)"; })
+                    .attr("class", function(d) {
+                        return "depth" + d.depth;
+                    })
+                    .text(function(d) { return d.name; });
+
+
+
+        }
+    });
+
+    d3.select(self.frameElement).style("height", diameter - 150 + "px");
+
+</script>
+
+</body>
+</html>
