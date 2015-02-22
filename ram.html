@@ -1,23 +1,185 @@
 <html>
-    <script>
-        var sampleRateKhz = 48000;
-        var bits = 24; 
-        var bpm = 60; // low end gives maximum ram requirement for loop length and undo function
-        var channels = 2; // stereo = 2 channels
-        var loopBanks = 2; 
-        var beats = 32;  // per bank
-        var undoLevels = 2;
+<head>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
 
-        function bytesRequired() {
-                var bps = sampleRateKhz / 8.0 * bits * channels;
-                var bytesPerLoop = bps * beats * bpm / 60;
-                var bytesTotal = bytesPerLoop * (loopBanks + undoLevels);
-                var megs = bytesTotal / 1000 / 1000;
-                return megs;
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+<style type="text/css">
+body {
+  padding-top: 50px;
+}
+.starter-template {
+  padding: 40px 15px;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Kaossilate</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="./">Home</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+
+      <div class="starter-template">
+        <h1>Kaossilator RAM Requirements</h1>
+        <p class="lead">How much RAM is required for a Kaossilator-like synthesiser?</p>
+      </div>
+
+
+<div class="col-md-4">
+<form>
+    <p>The Kaossilator Pro+ has four loop channels with a maximum of 16 beats each, 24 bit 48kHz </p>
+<button type="button" class="btn btn-default btn-sm">Calculate <span class="glyphicon glyphicon-arrow-right"></span></button>
+</form>
+
+<form>
+    <p>The Kaossilator 2 has two loop channels with a maximum of 8 beats each, 24 bit 48kHz </p>
+<button type="button" class="btn btn-default btn-sm">Calculate <span class="glyphicon glyphicon-arrow-right"></span></button>
+</form>
+</div>
+
+<div class="col-md-4">
+<form >
+
+<div class="form-group">
+    <label class="radio-inline">
+    <input type="radio" name="khz" id="khz48" value="48000" checked> 48 kHz
+    </label>
+    <label class="radio-inline">
+    <input type="radio" name="khz" id="khz441" value="44100"> 44.1 kHz
+    </label>
+</div>
+
+<div class="form-group">
+    <label class="radio-inline">
+    <input type="radio" name="bitrate" id="bits24" value="24" checked> 24 bit
+    </label>
+    <label class="radio-inline">
+    <input type="radio" name="bitrate" id="bits16" value="16"> 16 bit
+    </label>
+    <label class="radio-inline">
+    <input type="radio" name="bitrate" id="bits8" value="8"> 8 bit
+    </label>
+</div>
+
+<div class="form-group">
+    <label class="checkbox-inline">
+    <input type="checkbox" id="stereo" value="stereo" checked> stereo
+    </label>
+</div>
+
+  <div class="form-group">
+    <label for="minbpm">Minimum tempo (BPM)</label>
+    <input id="minbpm" type="number" class="form-control" value="60">
+  </div>
+
+  <div class="form-group">
+    <label for="loopbanks">Number of loop banks</label>
+    <select class="form-control" id="loopbanks">
+        <option>1</option>
+        <option selected>2</option>
+        <option>3</option>
+        <option>4</option>
+        <option>5</option>
+        <option>6</option>
+        <option>7</option>
+        <option>8</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="beatsperloop">Maximum number of beats per loop</label>
+    <select class="form-control" id="beatsperloop">
+        <option>4</option>
+        <option>8</option>
+        <option selected>16</option>
+        <option>32</option>
+        <option>64</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="undos">Number of levels of undo</label>
+    <select class="form-control" id="undos">
+        <option>0</option>
+        <option>1</option>
+        <option selected>2</option>
+        <option>3</option>
+        <option>4</option>
+        <option>5</option>
+        <option>6</option>
+        <option>7</option>
+        <option>8</option>
+    </select>
+  </div>
+</form>
+<h2>RAM required </h2>
+<span class="label label-primary" id="ramrequired"></span>
+</div>
+
+<div class="col-md-4">
+    <div class="alert alert-info" role="alert">
+    <span class="glyphicon glyphicon-info-sign"></span> In order to support realtime saving, the amount of RAM required may need to be doubled.
+    </div>
+    <div class="alert alert-info" role="alert">
+    <span class="glyphicon glyphicon-info-sign"></span> RAM requirements in this calculation do not include any space for instruments or effects, just the recording of sound.
+    </div>
+</div>
+    
+    </div><!-- /.container -->
+    <script>
+        var calc = function() {
+            var sampleRateKhz = parseInt($("input[name=khz][type=radio]:checked").val());
+            var bits = parseInt($("input[name=bitrate][type=radio]:checked").val()); 
+            // low end gives maximum ram requirement for loop length and undo function
+            
+            var bpmcontrol = $("input#minbpm");
+            var bpm = parseInt(bpmcontrol.val()); 
+            if (isNaN(bpm)) { 
+                bpmcontrol.val(60);
+                bpm = 60;
+            }
+            var channels = $("#stereo:checked").length + 1; // stereo = 2 channels
+
+            var loopBanks = parseInt($("#loopbanks option:selected").val()); 
+            var beats = parseInt($("#beatsperloop option:selected").val()); 
+            var undoLevels = parseInt($("#undos option:selected").val()); 
+
+            function megsRequired() {
+                    var bps = sampleRateKhz / 8.0 * bits * channels;
+                    var bytesPerLoop = bps * beats * bpm / 60;
+                    var bytesTotal = bytesPerLoop * (loopBanks + undoLevels);
+                    var megs = bytesTotal / 1000 / 1000;
+                    return megs.toFixed(0);
+            }
+            $("#ramrequired").text(megsRequired() + " Mb");
         }
-        console.log(bytesRequired(), "megs");
+        $(calc);
+        $("input").blur(calc);
+        $("input").change(calc);
+        $("select").change(calc);
     </script>
     
-    <p>look in console</p>
+</body>
 </html>
 
